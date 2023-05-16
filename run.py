@@ -5,7 +5,7 @@ import streamlit as st
 
 
 def generate_text(prompt, max_tokens, n, temperature):
-    response = openai.ChatCompletion.create(
+    response = openai.Completion.create(
         model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": "You are an all-knowing AI expert at inferring content, topics, subtopics, subsubtopics, etc. as well as likely questions, with a focus on high intent. Please think step by step to complete the following, and provide only the answer:"},
@@ -14,9 +14,12 @@ def generate_text(prompt, max_tokens, n, temperature):
         n=n,
         stop=None,
         temperature=temperature,
+        stream=True,  # Enable streaming
     )
-    message_content = response['choices'][0]['message']['content'].strip()
-    print(message_content)  # Print the generated text
+    for event in response:
+        if event['type'] == 'message':
+            message_content = event['message']['content'].strip()
+            print(message_content)  # Print the generated text
     return message_content
 
 def generate_subtopics(topic, max_tokens, n, temperature):
