@@ -12,7 +12,6 @@ def generate_text(prompt, max_tokens, n, temperature):
         messages=[
             {"role": "system", "content": "You are an all-knowing AI expert at inferring content, topics, subtopics, subsubtopics, etc. as well as likely questions, with a focus on high intent. Please think step by step to complete the following, and provide only the answer:"},
             {"role": "user", "content": f"{prompt}",
-        prompt=prompt,
         max_tokens=max_tokens,
         n=n,
         stop=None,
