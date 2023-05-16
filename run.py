@@ -4,8 +4,6 @@ import concurrent.futures
 import streamlit as st
 
 
-
-
 def generate_text(prompt, max_tokens, n, temperature):
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
@@ -17,7 +15,9 @@ def generate_text(prompt, max_tokens, n, temperature):
         stop=None,
         temperature=temperature,
     )
-    return response['choices'][0]['message']['content'].strip()
+    message_content = response['choices'][0]['message']['content'].strip()
+    print(message_content)  # Print the generated text
+    return message_content
 
 def generate_subtopics(topic, max_tokens, n, temperature):
     prompt = f"Generate 40 common subtopics related to {topic}"
@@ -45,18 +45,6 @@ def process_subsubtopic(topic, subtopic, subsubtopic, max_tokens, n, temperature
         data[f"Question {i + 1}"] = question
     return data
 
-def main(topic, max_tokens, n, temperature):
-    subtopics = generate_subtopics(topic, max_tokens, n, temperature)
-    data = []
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        for subtopic in subtopics:
-            subsubtopics = generate_subsubtopics(subtopic, max_tokens, n, temperature)
-            results = [executor.submit(process_subsubtopic, topic, subtopic, subsubtopic, max_tokens, n, temperature) for subsubtopic in subsubtopics]
-            for f in concurrent.futures.as_completed(results):
-                data.append(f.result())
-    df = pd.DataFrame(data)
-    return df
-
 # Streamlit app starts here
 def app():
     st.title("Topic, Subtopic, and Question Generator")
@@ -75,11 +63,19 @@ def app():
     temperature = st.slider("Temperature:", 0.1, 1.0, 0.6, step=0.1)
 
     if st.button("Generate"):
-        with st.spinner("Generating data..."):
-            df = main(topic, max_tokens, n, temperature)
-            st.write(df)
-
+        st.write("Generating data...")
+        subtopics = generate_subtopics(topic, max_tokens, n, temperature)
+        data = []
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            for subtopic in subtopics:
+                subsubtopics = generate_subsubtopics(subtopic, max_tokens, n, temperature)
+                results = [executor.submit(process_subsubtopic, topic, subtopic, subsubtopic, max_tokens, n, temperature) for subsubtopic in subsubtopics]
+                for f in concurrent.futures.as_completed(results):
+                    data.append(f.result())
+        df = pd.DataFrame(data)
+        st.write(df)
 
 if __name__ == "__main__":
     app()
 
+       
